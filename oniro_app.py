@@ -91,12 +91,21 @@ def main():
             """, unsafe_allow_html=True)
             
             password = st.text_input("Kod dostępu po zakupie:", type="password")
-            access_granted = (password == "MAGIA2026")
-            if access_granted: st.success("Dostęp Premium aktywny!")
+            # Sprawdzenie hasła bez pokazywania go w komunikatach
+            if password == "MAGIA2026":
+                st.success("Dostęp Premium aktywny!")
+                access_granted = True
+            elif password != "":
+                st.error("Nieprawidłowy kod dostępu.")
+                access_granted = False
+            else:
+                access_granted = False
+
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
         if st.button("✨ DEKODUJ SEN"):
-            if mode == "Premium ✨" and not access_granted: st.warning("Kup dostęp i wpisz kod MAGIA2026!")
+            if mode == "Premium ✨" and not access_granted:
+                st.warning("Ta funkcja wymaga kodu dostępu. Kup dostęp Premium, aby otrzymać kod.")
             elif api_key and dream_text:
                 with st.spinner("Oniro dekoduje..."):
                     try:
