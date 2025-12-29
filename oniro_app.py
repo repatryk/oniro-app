@@ -18,6 +18,22 @@ st.markdown("""
     .gold-text { color: #ffd700; font-weight: bold; font-size: 16px; }
     .dream-report { background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 20px; border-left: 5px solid #6d28d9; line-height: 1.8; font-size: 18px; }
     h1 { color: #a78bfa; text-align: center; font-size: 50px; text-shadow: 2px 2px 15px rgba(109, 40, 217, 0.6); }
+    
+    /* Styl przycisku platnosci */
+    .pay-button {
+        background: linear-gradient(45deg, #ffd700, #ff8c00);
+        color: black !important;
+        text-decoration: none;
+        padding: 15px 30px;
+        font-weight: bold;
+        border-radius: 30px;
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        transition: transform 0.2s;
+    }
+    .pay-button:hover { transform: scale(1.02); }
     </style>
 """, unsafe_allow_html=True)
 
@@ -43,7 +59,6 @@ def create_pro_pdf(analysis, image_url):
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
 
-    # 1. OBRAZ (Wycentrowany, wysoka jakosc pozycjonowania)
     try:
         response = requests.get(image_url)
         img_data = BytesIO(response.content)
@@ -54,7 +69,6 @@ def create_pro_pdf(analysis, image_url):
     except:
         pdf.set_y(40)
 
-    # 2. KONWERTER ZNAKOW (Zastepuje polskie litery)
     def to_latin(t):
         t = t.replace('**', '').replace('##', '').replace('#', '')
         rep = {'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
@@ -62,13 +76,11 @@ def create_pro_pdf(analysis, image_url):
         for k, v in rep.items(): t = t.replace(k, v)
         return re.sub(r'[^\x00-\x7f]', '', t)
 
-    # 3. TRESC
     lines = analysis.split('\n')
     for line in lines:
         if not line.strip(): continue
         txt = to_latin(line)
 
-        # Detekcja naglowkow (np. ATMOSPHERE, SYMBOLS)
         if len(txt) < 40 and any(keyword in txt.upper() for keyword in ["ATMOSFERA", "SYMBOLE", "PRZESLANIE", "WIZJA"]):
             pdf.ln(8)
             pdf.set_font("Arial", 'B', 15)
@@ -86,7 +98,6 @@ def create_pro_pdf(analysis, image_url):
     return pdf.output(dest='S').encode('latin-1')
 
 
-# --- LOGIKA AI ---
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
 
@@ -97,13 +108,11 @@ def get_ai_response(text, api_key, mode):
         sys_prompt = "You are Oniro Standard. Give a wise but short 5-sentence analysis in Polish. Leave the user wanting more."
         quality = "standard"
 
-    # Analiza
     analysis = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": text}]
     ).choices[0].message.content
 
-    # Obraz (zawsze bezpieczny prompt)
     img_prompt = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "system", "content": "Convert dream to safe DALL-E 3 prompt. Surrealism, 8k, Cinematic."},
@@ -115,11 +124,17 @@ def get_ai_response(text, api_key, mode):
     return analysis, img_url
 
 
-# --- INTERFEJS ---
 def main():
     st.markdown("<h1>🌙 ONIRO</h1>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([1.6, 1])
+
+    # POBIERANIE KLUCZA Z SEKRETOW
+    try:
+        api_key = st.secrets["OPENAI_API_KEY"]
+    except:
+        api_key = None
+        st.error("Brak skonfigurowanego klucza API w Secrets!")
 
     with col2:
         st.markdown("### ✨ Wybierz Poziom")
@@ -129,17 +144,18 @@ def main():
             st.markdown("<div class='tier-card'>• Wizja Standard<br>• Analiza podstawowa<br>✕ Brak PDF</div>",
                         unsafe_allow_html=True)
         else:
-            st.markdown("""
+            # Zjawiskowa karta Premium z przyciskiem
+            st.markdown(f"""
                 <div class='tier-card premium-active'>
                 <span class='gold-text'>★ Twój sen jako obraz Ultra HD</span><br>
                 <span class='gold-text'>★ Pełna mapa Twoich emocji i symboli</span><br>
                 <span class='gold-text'>★ Elegancki Raport PDF do zachowania</span><br>
                 <span class='gold-text'>★ Klucz do wewnętrznego świata</span><br><br>
-                <h2 style='color:#ffd700; text-align:center;'>9.00 PLN</h2>
+                <h2 style='color:#ffd700; text-align:center; margin-bottom:0;'>9.00 PLN</h2>
+                <a href="TU_WLEJ_LINK_STRIPE" class="pay-button">ODBLOKUJ WIZJĘ TERAZ 🌙</a>
+                <p style='text-align:center; font-size:10px; color:#888; margin-top:10px;'>Bezpieczna płatność BLIK / Karta</p>
                 </div>
             """, unsafe_allow_html=True)
-
-        api_key = st.secrets["OPENAI_API_KEY"]
 
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
@@ -161,5 +177,4 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()
