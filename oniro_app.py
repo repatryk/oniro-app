@@ -75,6 +75,7 @@ def main():
     col1, col2 = st.columns([1.6, 1])
     try: api_key = st.secrets["OPENAI_API_KEY"]
     except: api_key = None
+    
     with col2:
         st.markdown("### ✨ Wybierz Poziom")
         mode = st.radio("Mode:", ["Standard", "Premium ✨"], label_visibility="collapsed")
@@ -90,16 +91,15 @@ def main():
                 <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
             """, unsafe_allow_html=True)
             
-            # --- POPRAWIONE POLE HASŁA ---
             password = st.text_input(
                 "Wpisz otrzymany kod i naciśnij Enter:", 
                 type="password", 
-                placeholder="Wpisz kod tutaj..."
+                placeholder="Kod tutaj..."
             )
             
             if password == "MAGIA2026":
-                st.balloons() # Efekt wystrzału po wpisaniu kodu!
-                st.success("Dostęp Premium aktywny! Możesz teraz zdekodować swój sen.")
+                st.balloons() # Radość z odblokowania Premium
+                st.success("Dostęp Premium aktywny! Kliknij 'DEKODUJ SEN'.")
                 access_granted = True
             elif password != "":
                 st.error("Nieprawidłowy kod dostępu.")
@@ -111,12 +111,19 @@ def main():
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
         if st.button("✨ DEKODUJ SEN"):
             if mode == "Premium ✨" and not access_granted:
-                st.warning("Ta funkcja wymaga kodu dostępu. Kup dostęp Premium, aby otrzymać kod.")
+                st.warning("Ta funkcja wymaga kodu dostępu. Kup Premium, aby go otrzymać.")
             elif api_key and dream_text:
-                with st.spinner("Oniro dekoduje..."):
+                with st.spinner("Oniro dekoduje Twoją wizję..."):
                     try:
                         ans, img = get_ai_response(dream_text, api_key, mode)
-                        st.image(img, use_container_width=True); st.markdown(f"<div class='dream-report'>{ans}</div>", unsafe_allow_html=True)
-                        if mode == "Premium ✨": st.download_button("📥 POBIERZ PDF", data=create_pro_pdf(ans, img), file_name="Oniro.pdf", mime="application/pdf")
-                    except Exception as e: st.error(f"Error: {e}")
-if __name__ == "__main__": main()
+                        if mode == "Premium ✨":
+                            st.snow() # Efekt spadających gwiazd przy wyniku Premium
+                        st.image(img, use_container_width=True)
+                        st.markdown(f"<div class='dream-report'>{ans}</div>", unsafe_allow_html=True)
+                        if mode == "Premium ✨":
+                            st.download_button("📥 POBIERZ RAPORT PDF", data=create_pro_pdf(ans, img), file_name="Oniro_Report.pdf", mime="application/pdf")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+
+if __name__ == "__main__":
+    main()
