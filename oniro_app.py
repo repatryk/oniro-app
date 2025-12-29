@@ -90,10 +90,16 @@ def main():
                 <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
             """, unsafe_allow_html=True)
             
-            password = st.text_input("Kod dostępu po zakupie:", type="password")
-            # Sprawdzenie hasła bez pokazywania go w komunikatach
+            # --- POPRAWIONE POLE HASŁA ---
+            password = st.text_input(
+                "Wpisz otrzymany kod i naciśnij Enter:", 
+                type="password", 
+                placeholder="Wpisz kod tutaj..."
+            )
+            
             if password == "MAGIA2026":
-                st.success("Dostęp Premium aktywny!")
+                st.balloons() # Efekt wystrzału po wpisaniu kodu!
+                st.success("Dostęp Premium aktywny! Możesz teraz zdekodować swój sen.")
                 access_granted = True
             elif password != "":
                 st.error("Nieprawidłowy kod dostępu.")
