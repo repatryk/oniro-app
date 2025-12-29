@@ -8,6 +8,10 @@ import re
 # --- KONFIGURACJA ---
 st.set_page_config(page_title="Oniro - Dream Portal", page_icon="🌙", layout="wide")
 
+# Inicjalizacja pamięci sesji dla balonów
+if 'balloons_done' not in st.session_state:
+    st.session_state['balloons_done'] = False
+
 # --- DESIGN CSS ---
 st.markdown("""
     <style>
@@ -98,14 +102,19 @@ def main():
             )
             
             if password == "MAGIA2026":
-                st.balloons() # Radość z odblokowania Premium
+                # Balony strzelają tylko raz po wpisaniu poprawnego kodu
+                if not st.session_state['balloons_done']:
+                    st.balloons()
+                    st.session_state['balloons_done'] = True
                 st.success("Dostęp Premium aktywny! Kliknij 'DEKODUJ SEN'.")
                 access_granted = True
             elif password != "":
                 st.error("Nieprawidłowy kod dostępu.")
                 access_granted = False
+                st.session_state['balloons_done'] = False # Reset jeśli ktoś zmieni kod na zły
             else:
                 access_granted = False
+                st.session_state['balloons_done'] = False
 
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
