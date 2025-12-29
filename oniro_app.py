@@ -65,7 +65,7 @@ def create_pro_pdf(analysis, image_url):
 
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
-    sys_prompt = "You are Oniro Pro. Provide a deep, mystical analysis (400+ words). Respond in Polish." if mode == "Premium ✨" else "You are Oniro Standard. 5 sentences in Polish."
+    sys_prompt = "You are Oniro Pro. Deep, mystical analysis (400+ words) in Polish." if mode == "Premium ✨" else "Short 5 sentences in Polish."
     analysis = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": text}]).choices[0].message.content
     img_url = client.images.generate(model="dall-e-3", prompt=text, quality="hd" if mode == "Premium ✨" else "standard", size="1024x1024").data[0].url
     return analysis, img_url
@@ -89,12 +89,15 @@ def main():
                 <a href="https://buy.stripe.com/aFa6oA46o7fQg8b29k4Ni00" target="_blank" style="text-decoration:none;">
                 <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
             """, unsafe_allow_html=True)
-            password = st.text_input("Kod dostępu:", type="password")
-            access_granted = (password == "MAGIA2025")
+            
+            # HASŁO USTAWIONE NA MAGIA2026
+            password = st.text_input("Kod dostępu po zakupie:", type="password")
+            access_granted = (password == "MAGIA2026")
+            if access_granted: st.success("Dostęp Premium aktywny!")
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
         if st.button("✨ DEKODUJ SEN"):
-            if mode == "Premium ✨" and not access_granted: st.warning("Kup dostęp i wpisz kod!")
+            if mode == "Premium ✨" and not access_granted: st.warning("Kup dostęp i wpisz kod MAGIA2026!")
             elif api_key and dream_text:
                 with st.spinner("Oniro dekoduje..."):
                     try:
