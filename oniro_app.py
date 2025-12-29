@@ -21,7 +21,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- PROFESJONALNA KLASA PDF ---
+# --- KLASA PDF ---
 class DreamPDF(FPDF):
     def header(self):
         if self.page_no() == 1:
@@ -29,7 +29,6 @@ class DreamPDF(FPDF):
             self.set_text_color(109, 40, 217)
             self.cell(0, 25, 'ONIRO - YOUR VISION', 0, 1, 'C')
             self.ln(10)
-
     def footer(self):
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
@@ -43,114 +42,64 @@ def create_pro_pdf(analysis, image_url):
     try:
         response = requests.get(image_url)
         img_data = BytesIO(response.content)
-        with open("temp_img.png", "wb") as f:
-            f.write(img_data.getbuffer())
+        with open("temp_img.png", "wb") as f: f.write(img_data.getbuffer())
         pdf.image("temp_img.png", x=25, y=45, w=160)
         pdf.set_y(210)
-    except:
-        pdf.set_y(40)
-
+    except: pdf.set_y(40)
     def to_latin(t):
         t = t.replace('**', '').replace('##', '').replace('#', '')
-        rep = {'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
-               'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'}
+        rep = {'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z', 'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'}
         for k, v in rep.items(): t = t.replace(k, v)
         return re.sub(r'[^\x00-\x7f]', '', t)
-
     lines = analysis.split('\n')
     for line in lines:
         if not line.strip(): continue
         txt = to_latin(line)
-        if len(txt) < 40 and any(keyword in txt.upper() for keyword in ["ATMOSFERA", "SYMBOLE", "PRZESLANIE", "WIZJA"]):
-            pdf.ln(8)
-            pdf.set_font("Arial", 'B', 15)
-            pdf.set_text_color(109, 40, 217)
-            pdf.cell(0, 10, txt.strip().upper(), 0, 1, 'L')
-            pdf.set_draw_color(109, 40, 217)
-            pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 50, pdf.get_y())
-            pdf.ln(5)
+        if len(txt) < 40 and any(kw in txt.upper() for kw in ["ATMOSFERA", "SYMBOLE", "PRZESLANIE", "WIZJA"]):
+            pdf.ln(8); pdf.set_font("Arial", 'B', 15); pdf.set_text_color(109, 40, 217)
+            pdf.cell(0, 10, txt.strip().upper(), 0, 1, 'L'); pdf.set_draw_color(109, 40, 217)
+            pdf.line(pdf.get_x(), pdf.get_y(), pdf.get_x() + 50, pdf.get_y()); pdf.ln(5)
         else:
-            pdf.set_font("Arial", size=11)
-            pdf.set_text_color(40, 40, 40)
-            pdf.multi_cell(0, 8, txt=txt, align='J')
-            pdf.ln(2)
+            pdf.set_font("Arial", size=11); pdf.set_text_color(40, 40, 40); pdf.multi_cell(0, 8, txt=txt, align='J'); pdf.ln(2)
     return pdf.output(dest='S').encode('latin-1')
 
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
-    if mode == "Premium ✨":
-        sys_prompt = "You are Oniro Pro. Provide a deep, mystical, and long psychological analysis (400+ words). Use headers: ATMOSFERA, SYMBOLE, PRZESLANIE. Respond in Polish."
-        quality = "hd"
-    else:
-        sys_prompt = "You are Oniro Standard. Give a wise but short 5-sentence analysis in Polish."
-        quality = "standard"
-
-    analysis = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": text}]
-    ).choices[0].message.content
-
-    img_prompt = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "system", "content": "Convert dream to safe DALL-E 3 prompt. Surrealism, 8k, Cinematic."},
-                  {"role": "user", "content": text}]
-    ).choices[0].message.content
-
-    img_url = client.images.generate(model="dall-e-3", prompt=img_prompt, quality=quality, size="1024x1024").data[0].url
+    sys_prompt = "You are Oniro Pro. Provide a deep, mystical analysis (400+ words). Respond in Polish." if mode == "Premium ✨" else "You are Oniro Standard. 5 sentences in Polish."
+    analysis = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": text}]).choices[0].message.content
+    img_url = client.images.generate(model="dall-e-3", prompt=text, quality="hd" if mode == "Premium ✨" else "standard", size="1024x1024").data[0].url
     return analysis, img_url
 
 def main():
     st.markdown("<h1>🌙 ONIRO</h1>", unsafe_allow_html=True)
     col1, col2 = st.columns([1.6, 1])
-
-    try:
-        api_key = st.secrets["OPENAI_API_KEY"]
-    except:
-        api_key = None
-
+    try: api_key = st.secrets["OPENAI_API_KEY"]
+    except: api_key = None
     with col2:
         st.markdown("### ✨ Wybierz Poziom")
-        mode = st.radio("Tryb:", ["Standard", "Premium ✨"], label_visibility="collapsed")
-
+        mode = st.radio("Mode:", ["Standard", "Premium ✨"], label_visibility="collapsed")
         if mode == "Standard":
             st.markdown("<div class='tier-card'>• Wizja Standard<br>• Analiza podstawowa<br>✕ Brak PDF</div>", unsafe_allow_html=True)
             access_granted = True
         else:
             st.markdown(f"""
                 <div class='tier-card premium-active'>
-                    <span class='gold-text'>★ Obraz Ultra HD</span><br>
-                    <span class='gold-text'>★ Pełna Analiza Symboli</span><br>
-                    <span class='gold-text'>★ Raport PDF</span><br><br>
-                    <h2 style='color:#ffd700; text-align:center;'>9.00 PLN</h2>
-                    <a href="https://buy.stripe.com/aFa6oA46o7fQg8b29k4Ni00" target="_blank" style="text-decoration: none;">
-                        <div style="background: #ffd700; color: black; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center;">KUP DOSTĘP PREMIUM</div>
-                    </a>
-                </div>
+                <span class='gold-text'>★ Obraz Ultra HD</span><br><span class='gold-text'>★ Pełna Analiza</span><br><span class='gold-text'>★ Raport PDF</span><br><br>
+                <h2 style='color:#ffd700; text-align:center;'>9.00 PLN</h2>
+                <a href="https://buy.stripe.com/aFa6oA46o7fQg8b29k4Ni00" target="_blank" style="text-decoration:none;">
+                <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
             """, unsafe_allow_html=True)
-            
-            password = st.text_input("Wpisz kod dostępu po zakupie:", type="password")
-            if password == "MAGIA2025":
-                st.success("Dostęp Premium aktywny!")
-                access_granted = True
-            else:
-                access_granted = False
-
+            password = st.text_input("Kod dostępu:", type="password")
+            access_granted = (password == "MAGIA2025")
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
         if st.button("✨ DEKODUJ SEN"):
-            if mode == "Premium ✨" and not access_granted:
-                st.warning("Aby skorzystać z Premium, kup dostęp i wpisz kod!")
+            if mode == "Premium ✨" and not access_granted: st.warning("Kup dostęp i wpisz kod!")
             elif api_key and dream_text:
-                with st.spinner("Oniro dekoduje Twoją wizję..."):
+                with st.spinner("Oniro dekoduje..."):
                     try:
-                        analysis, img_url = get_ai_response(dream_text, api_key, mode)
-                        st.image(img_url, use_container_width=True)
-                        st.markdown(f"<div class='dream-report'>{analysis}</div>", unsafe_allow_html=True)
-                        if mode == "Premium ✨":
-                            pdf = create_pro_pdf(analysis, img_url)
-                            st.download_button("📥 POBIERZ RAPORT PDF", data=pdf, file_name="Oniro_Report.pdf", mime="application/pdf")
-                    except Exception as e:
-                        st.error(f"Błąd: {e}")
-
-if __name__ == "__main__":
-    main()
+                        ans, img = get_ai_response(dream_text, api_key, mode)
+                        st.image(img, use_container_width=True); st.markdown(f"<div class='dream-report'>{ans}</div>", unsafe_allow_html=True)
+                        if mode == "Premium ✨": st.download_button("📥 POBIERZ PDF", data=create_pro_pdf(ans, img), file_name="Oniro.pdf", mime="application/pdf")
+                    except Exception as e: st.error(f"Error: {e}")
+if __name__ == "__main__": main()
