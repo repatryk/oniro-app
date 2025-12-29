@@ -144,18 +144,20 @@ def main():
             st.markdown("<div class='tier-card'>• Wizja Standard<br>• Analiza podstawowa<br>✕ Brak PDF</div>",
                         unsafe_allow_html=True)
         else:
-            # Zjawiskowa karta Premium z przyciskiem
-            st.markdown(f"""
-                <div class='tier-card premium-active'>
-                <span class='gold-text'>★ Twój sen jako obraz Ultra HD</span><br>
-                <span class='gold-text'>★ Pełna mapa Twoich emocji i symboli</span><br>
-                <span class='gold-text'>★ Elegancki Raport PDF do zachowania</span><br>
-                <span class='gold-text'>★ Klucz do wewnętrznego świata</span><br><br>
-                <h2 style='color:#ffd700; text-align:center; margin-bottom:0;'>9.00 PLN</h2>
-                <a href="TU_WLEJ_LINK_STRIPE" class="pay-button">ODBLOKUJ WIZJĘ TERAZ 🌙</a>
-                <p style='text-align:center; font-size:10px; color:#888; margin-top:10px;'>Bezpieczna płatność BLIK / Karta</p>
+            # Zjawiskowa karta Premium
+            st.markdown("""
+                <div style="background: rgba(167, 139, 250, 0.1); padding: 20px; border-radius: 15px; border: 2px solid #ffd700; text-align: center;">
+                    <span style="color: #ffd700; font-weight: bold;">★ OBRAZ ULTRA HD</span><br>
+                    <span style="color: #ffd700; font-weight: bold;">★ ANALIZA PSYCHOLOGICZNA</span><br>
+                    <span style="color: #ffd700; font-weight: bold;">★ RAPORT PDF</span><br><br>
+                    <h2 style="color: #ffd700; margin: 0;">9.00 PLN</h2>
                 </div>
             """, unsafe_allow_html=True)
+            
+            # Prawdziwy przycisk Streamlit pod spodem (zamiast linku HTML)
+            st.markdown("###")
+            if st.button("🚀 ODBLOKUJ WIZJĘ PREMIUM (PŁACĘ 9 ZŁ)"):
+                st.info("Przekierowanie do płatności... (Tutaj wstawimy Twój link Stripe)")
 
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
@@ -178,3 +180,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
