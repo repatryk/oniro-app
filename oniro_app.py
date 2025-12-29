@@ -18,25 +18,8 @@ st.markdown("""
     .gold-text { color: #ffd700; font-weight: bold; font-size: 16px; }
     .dream-report { background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 20px; border-left: 5px solid #6d28d9; line-height: 1.8; font-size: 18px; }
     h1 { color: #a78bfa; text-align: center; font-size: 50px; text-shadow: 2px 2px 15px rgba(109, 40, 217, 0.6); }
-    
-    /* Styl przycisku platnosci */
-    .pay-button {
-        background: linear-gradient(45deg, #ffd700, #ff8c00);
-        color: black !important;
-        text-decoration: none;
-        padding: 15px 30px;
-        font-weight: bold;
-        border-radius: 30px;
-        display: block;
-        text-align: center;
-        margin-top: 20px;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-        transition: transform 0.2s;
-    }
-    .pay-button:hover { transform: scale(1.02); }
     </style>
 """, unsafe_allow_html=True)
-
 
 # --- PROFESJONALNA KLASA PDF ---
 class DreamPDF(FPDF):
@@ -53,12 +36,10 @@ class DreamPDF(FPDF):
         self.set_text_color(150, 150, 150)
         self.cell(0, 10, f'Page {self.page_no()} | Oniro Dream Analysis', 0, 0, 'C')
 
-
 def create_pro_pdf(analysis, image_url):
     pdf = DreamPDF()
     pdf.set_auto_page_break(auto=True, margin=20)
     pdf.add_page()
-
     try:
         response = requests.get(image_url)
         img_data = BytesIO(response.content)
@@ -80,7 +61,6 @@ def create_pro_pdf(analysis, image_url):
     for line in lines:
         if not line.strip(): continue
         txt = to_latin(line)
-
         if len(txt) < 40 and any(keyword in txt.upper() for keyword in ["ATMOSFERA", "SYMBOLE", "PRZESLANIE", "WIZJA"]):
             pdf.ln(8)
             pdf.set_font("Arial", 'B', 15)
@@ -94,18 +74,15 @@ def create_pro_pdf(analysis, image_url):
             pdf.set_text_color(40, 40, 40)
             pdf.multi_cell(0, 8, txt=txt, align='J')
             pdf.ln(2)
-
     return pdf.output(dest='S').encode('latin-1')
-
 
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
-
     if mode == "Premium ✨":
         sys_prompt = "You are Oniro Pro. Provide a deep, mystical, and long psychological analysis (400+ words). Use headers: ATMOSFERA, SYMBOLE, PRZESLANIE. Respond in Polish."
         quality = "hd"
     else:
-        sys_prompt = "You are Oniro Standard. Give a wise but short 5-sentence analysis in Polish. Leave the user wanting more."
+        sys_prompt = "You are Oniro Standard. Give a wise but short 5-sentence analysis in Polish."
         quality = "standard"
 
     analysis = client.chat.completions.create(
@@ -120,64 +97,60 @@ def get_ai_response(text, api_key, mode):
     ).choices[0].message.content
 
     img_url = client.images.generate(model="dall-e-3", prompt=img_prompt, quality=quality, size="1024x1024").data[0].url
-
     return analysis, img_url
-
 
 def main():
     st.markdown("<h1>🌙 ONIRO</h1>", unsafe_allow_html=True)
-
     col1, col2 = st.columns([1.6, 1])
 
-    # POBIERANIE KLUCZA Z SEKRETOW
     try:
         api_key = st.secrets["OPENAI_API_KEY"]
     except:
         api_key = None
-        st.error("Brak skonfigurowanego klucza API w Secrets!")
 
     with col2:
         st.markdown("### ✨ Wybierz Poziom")
-        mode = st.radio("Mode:", ["Standard", "Premium ✨"], label_visibility="collapsed")
+        mode = st.radio("Tryb:", ["Standard", "Premium ✨"], label_visibility="collapsed")
 
         if mode == "Standard":
-            st.markdown("<div class='tier-card'>• Wizja Standard<br>• Analiza podstawowa<br>✕ Brak PDF</div>",
-                        unsafe_allow_html=True)
+            st.markdown("<div class='tier-card'>• Wizja Standard<br>• Analiza podstawowa<br>✕ Brak PDF</div>", unsafe_allow_html=True)
+            access_granted = True
         else:
-            # Zjawiskowa karta Premium
-            st.markdown("""
-                <div style="background: rgba(167, 139, 250, 0.1); padding: 20px; border-radius: 15px; border: 2px solid #ffd700; text-align: center;">
-                    <span style="color: #ffd700; font-weight: bold;">★ OBRAZ ULTRA HD</span><br>
-                    <span style="color: #ffd700; font-weight: bold;">★ ANALIZA PSYCHOLOGICZNA</span><br>
-                    <span style="color: #ffd700; font-weight: bold;">★ RAPORT PDF</span><br><br>
-                    <h2 style="color: #ffd700; margin: 0;">9.00 PLN</h2>
+            st.markdown(f"""
+                <div class='tier-card premium-active'>
+                    <span class='gold-text'>★ Obraz Ultra HD</span><br>
+                    <span class='gold-text'>★ Pełna Analiza Symboli</span><br>
+                    <span class='gold-text'>★ Raport PDF</span><br><br>
+                    <h2 style='color:#ffd700; text-align:center;'>9.00 PLN</h2>
+                    <a href="https://buy.stripe.com/aFa6oA46o7fQg8b29k4Ni00" target="_blank" style="text-decoration: none;">
+                        <div style="background: #ffd700; color: black; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center;">KUP DOSTĘP PREMIUM</div>
+                    </a>
                 </div>
             """, unsafe_allow_html=True)
             
-            # Prawdziwy przycisk Streamlit pod spodem (zamiast linku HTML)
-            st.markdown("###")
-            if st.button("🚀 ODBLOKUJ WIZJĘ PREMIUM (PŁACĘ 9 ZŁ)"):
-                st.info("Przekierowanie do płatności... (Tutaj wstawimy Twój link Stripe)")
+            password = st.text_input("Wpisz kod dostępu po zakupie:", type="password")
+            if password == "MAGIA2025":
+                st.success("Dostęp Premium aktywny!")
+                access_granted = True
+            else:
+                access_granted = False
 
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
-
         if st.button("✨ DEKODUJ SEN"):
-            if api_key and dream_text:
-                with st.spinner("Oniro analizuje Twoją duszę..."):
+            if mode == "Premium ✨" and not access_granted:
+                st.warning("Aby skorzystać z Premium, kup dostęp i wpisz kod!")
+            elif api_key and dream_text:
+                with st.spinner("Oniro dekoduje Twoją wizję..."):
                     try:
                         analysis, img_url = get_ai_response(dream_text, api_key, mode)
                         st.image(img_url, use_container_width=True)
                         st.markdown(f"<div class='dream-report'>{analysis}</div>", unsafe_allow_html=True)
-
                         if mode == "Premium ✨":
                             pdf = create_pro_pdf(analysis, img_url)
-                            st.download_button("📥 POBIERZ RAPORT PREMIUM PDF", data=pdf, file_name="Oniro_Report.pdf",
-                                               mime="application/pdf")
+                            st.download_button("📥 POBIERZ RAPORT PDF", data=pdf, file_name="Oniro_Report.pdf", mime="application/pdf")
                     except Exception as e:
-                        st.error(f"Error: {e}")
-
+                        st.error(f"Błąd: {e}")
 
 if __name__ == "__main__":
     main()
-
