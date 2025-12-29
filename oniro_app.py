@@ -139,7 +139,7 @@ def main():
                 </div>
             """, unsafe_allow_html=True)
 
-        api_key = st.text_input("Klucz API", type="password")
+        api_key = st.secrets["OPENAI_API_KEY"]
 
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
@@ -161,4 +161,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
