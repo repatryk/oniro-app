@@ -86,11 +86,10 @@ def main():
                 <div class='tier-card premium-active'>
                 <span class='gold-text'>★ Obraz Ultra HD</span><br><span class='gold-text'>★ Pełna Analiza</span><br><span class='gold-text'>★ Raport PDF</span><br><br>
                 <h2 style='color:#ffd700; text-align:center;'>9.00 PLN</h2>
-                <a href="https://buy.stripe.com/aFa6oA46o7fQg8b29k4Ni00" target="_blank" style="text-decoration:none;">
+                <a href="https://buy.stripe.com/eVqdR25as8jU8FJ4hs4Ni01" target="_blank" style="text-decoration:none;">
                 <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
             """, unsafe_allow_html=True)
             
-            # HASŁO USTAWIONE NA MAGIA2026
             password = st.text_input("Kod dostępu po zakupie:", type="password")
             access_granted = (password == "MAGIA2026")
             if access_granted: st.success("Dostęp Premium aktywny!")
