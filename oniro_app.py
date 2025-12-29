@@ -12,7 +12,7 @@ st.set_page_config(page_title="Oniro - Dream Portal", page_icon="🌙", layout="
 if 'balloons_done' not in st.session_state:
     st.session_state['balloons_done'] = False
 
-# --- ZABEZPIECZENIE: Pamięć weryfikacji ---
+# --- DODANE ZABEZPIECZENIE (Pamięć weryfikacji) ---
 if 'premium_verified' not in st.session_state:
     st.session_state['premium_verified'] = False
 
@@ -114,8 +114,10 @@ def main():
             elif password != "":
                 st.error("Nieprawidłowy kod.")
                 st.session_state['premium_verified'] = False
+                st.session_state['balloons_done'] = False
             else:
                 st.session_state['premium_verified'] = False
+                st.session_state['balloons_done'] = False
 
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
@@ -133,7 +135,6 @@ def main():
                             # --- BLOKADA PO UŻYCIU ---
                             st.session_state['premium_verified'] = False
                             st.session_state['balloons_done'] = False
-                            st.info("Kod został wykorzystany. Wpisz go ponownie, aby przeanalizować kolejny sen.")
                     except Exception as e:
                         st.error(f"Error: {e}")
 
