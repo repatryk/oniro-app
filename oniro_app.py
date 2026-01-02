@@ -74,7 +74,7 @@ def create_pro_pdf(analysis, image_url):
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
     
-    # --- POPRAWIONY PROMPT (Mroczny i sprzedażowy dla darmowej wersji) ---
+    # --- POPRAWIONY PROMPT ---
     if mode == "Premium ✨":
         sys_prompt = "Jesteś Oniro Pro. Wykonaj głęboką, mistyczną i profesjonalną analizę snu (ponad 400 słów) w języku polskim. Używaj bogatego słownictwa, odnoś się do archetypów Junga i symboliki onirycznej."
     else:
@@ -82,8 +82,22 @@ def get_ai_response(text, api_key, mode):
         Nie opisuj naiwnie tego, co widać na obrazku. Skup się na ukrytych lękach i podświadomości. 
         Zakończ tekst zdaniem: 'Twoja podświadomość skrywa więcej – pełny raport i wizja Ultra HD dostępne w wersji Premium.'"""
     
-    analysis = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": text}]).choices[0].message.content
-    img_url = client.images.generate(model="dall-e-3", prompt=text, quality="hd" if mode == "Premium ✨" else "standard", size="1024x1024").data[0].url
+    # Tutaj był błąd - teraz nawiasy są poprawnie zamknięte
+    analysis = client.chat.completions.create(
+        model="gpt-4o", 
+        messages=[
+            {"role": "system", "content": sys_prompt}, 
+            {"role": "user", "content": text}
+        ]
+    ).choices[0].message.content
+    
+    img_url = client.images.generate(
+        model="dall-e-3", 
+        prompt=text, 
+        quality="hd" if mode == "Premium ✨" else "standard", 
+        size="1024x1024"
+    ).data[0].url
+    
     return analysis, img_url
 
 def main():
@@ -147,3 +161,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
