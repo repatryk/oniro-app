@@ -8,11 +8,11 @@ import re
 # --- KONFIGURACJA ---
 st.set_page_config(page_title="Oniro - Dream Portal", page_icon="🌙", layout="wide")
 
-# Pamięć sesji dla balonów (tylko raz po wpisaniu kodu)
+# Pamięć sesji dla balonów
 if 'balloons_done' not in st.session_state:
     st.session_state['balloons_done'] = False
 
-# --- DODANE ZABEZPIECZENIE (Pamięć weryfikacji) ---
+# Pamięć weryfikacji Premium
 if 'premium_verified' not in st.session_state:
     st.session_state['premium_verified'] = False
 
@@ -74,15 +74,14 @@ def create_pro_pdf(analysis, image_url):
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
     
-    # --- POPRAWIONY PROMPT ---
     if mode == "Premium ✨":
         sys_prompt = "Jesteś Oniro Pro. Wykonaj głęboką, mistyczną i profesjonalną analizę snu (ponad 400 słów) w języku polskim. Używaj bogatego słownictwa, odnoś się do archetypów Junga i symboliki onirycznej."
     else:
         sys_prompt = """Jesteś Oniro Standard. Twoim zadaniem jest podanie mrocznego, psychologicznego wglądu w sen użytkownika w dokładnie 2-3 zdaniach. 
-        Nie opisuj naiwnie tego, co widać na obrazku. Skup się na ukrytych lękach i podświadomości. 
+        Nie opisuj naiwnie tego, co widać na obrazku. Skup się na ukrytych lękach, symbolice podświadomości i niepokojących aspektach jaźni. 
         Zakończ tekst zdaniem: 'Twoja podświadomość skrywa więcej – pełny raport i wizja Ultra HD dostępne w wersji Premium.'"""
     
-    # Tutaj był błąd - teraz nawiasy są poprawnie zamknięte
+    # Naprawiona składnia nawiasów
     analysis = client.chat.completions.create(
         model="gpt-4o", 
         messages=[
@@ -121,25 +120,17 @@ def main():
                 <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
             """, unsafe_allow_html=True)
             
-            password = st.text_input(
-                "Wpisz otrzymany kod i naciśnij Enter:", 
-                type="password", 
-                placeholder="Kod tutaj..."
-            )
+            password = st.text_input("Wpisz otrzymany kod:", type="password", placeholder="Kod tutaj...")
             
             if password == "MAGIA2026":
                 if not st.session_state['balloons_done']:
                     st.balloons()
                     st.session_state['balloons_done'] = True
-                st.success("Dostęp Premium aktywny! Możesz zdekodować swój sen.")
+                st.success("Dostęp Premium aktywny!")
                 st.session_state['premium_verified'] = True
             elif password != "":
                 st.error("Nieprawidłowy kod.")
                 st.session_state['premium_verified'] = False
-                st.session_state['balloons_done'] = False
-            else:
-                st.session_state['premium_verified'] = False
-                st.session_state['balloons_done'] = False
 
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
@@ -147,7 +138,7 @@ def main():
             if mode == "Premium ✨" and not st.session_state['premium_verified']:
                 st.warning("Ta funkcja wymaga kodu dostępu.")
             elif api_key and dream_text:
-                with st.spinner("Oniro dekoduje..."):
+                with st.spinner("Oniro dekoduje podświadomość..."):
                     try:
                         ans, img = get_ai_response(dream_text, api_key, mode)
                         st.image(img, use_container_width=True)
@@ -155,10 +146,8 @@ def main():
                         if mode == "Premium ✨":
                             st.download_button("📥 POBIERZ RAPORT PDF", data=create_pro_pdf(ans, img), file_name="Oniro_Report.pdf", mime="application/pdf")
                             st.session_state['premium_verified'] = False
-                            st.session_state['balloons_done'] = False
                     except Exception as e:
                         st.error(f"Error: {e}")
 
 if __name__ == "__main__":
     main()
-
