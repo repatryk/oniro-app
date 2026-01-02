@@ -73,70 +73,13 @@ def create_pro_pdf(analysis, image_url):
 
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
-    sys_prompt = "You are Oniro Pro. Deep, mystical analysis (400+ words) in Polish." if mode == "Premium ✨" else "Short 5 sentences in Polish."
-    analysis = client.chat.completions.create(model="gpt-4o", messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": text}]).choices[0].message.content
-    img_url = client.images.generate(model="dall-e-3", prompt=text, quality="hd" if mode == "Premium ✨" else "standard", size="1024x1024").data[0].url
-    return analysis, img_url
-
-def main():
-    st.markdown("<h1>🌙 ONIRO</h1>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1.6, 1])
-    try: api_key = st.secrets["OPENAI_API_KEY"]
-    except: api_key = None
     
-    with col2:
-        st.markdown("### ✨ Wybierz Poziom")
-        mode = st.radio("Mode:", ["Standard", "Premium ✨"], label_visibility="collapsed")
-        if mode == "Standard":
-            st.markdown("<div class='tier-card'>• Wizja Standard<br>• Analiza podstawowa<br>✕ Brak PDF</div>", unsafe_allow_html=True)
-            st.session_state['premium_verified'] = True
-        else:
-            st.markdown(f"""
-                <div class='tier-card premium-active'>
-                <span class='gold-text'>★ Obraz Ultra HD</span><br><span class='gold-text'>★ Pełna Analiza</span><br><span class='gold-text'>★ Raport PDF</span><br><br>
-                <h2 style='color:#ffd700; text-align:center;'>9.00 PLN</h2>
-                <a href="https://buy.stripe.com/eVqdR25as8jU8FJ4hs4Ni01" target="_blank" style="text-decoration:none;">
-                <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
-            """, unsafe_allow_html=True)
-            
-            password = st.text_input(
-                "Wpisz otrzymany kod i naciśnij Enter:", 
-                type="password", 
-                placeholder="Kod tutaj..."
-            )
-            
-            if password == "MAGIA2026":
-                if not st.session_state['balloons_done']:
-                    st.balloons()
-                    st.session_state['balloons_done'] = True
-                st.success("Dostęp Premium aktywny! Możesz zdekodować swój sen.")
-                st.session_state['premium_verified'] = True
-            elif password != "":
-                st.error("Nieprawidłowy kod.")
-                st.session_state['premium_verified'] = False
-                st.session_state['balloons_done'] = False
-            else:
-                st.session_state['premium_verified'] = False
-                st.session_state['balloons_done'] = False
-
-    with col1:
-        dream_text = st.text_area("Opisz swoją wizję...", height=300)
-        if st.button("✨ DEKODUJ SEN"):
-            if mode == "Premium ✨" and not st.session_state['premium_verified']:
-                st.warning("Ta funkcja wymaga kodu dostępu.")
-            elif api_key and dream_text:
-                with st.spinner("Oniro dekoduje..."):
-                    try:
-                        ans, img = get_ai_response(dream_text, api_key, mode)
-                        st.image(img, use_container_width=True)
-                        st.markdown(f"<div class='dream-report'>{ans}</div>", unsafe_allow_html=True)
-                        if mode == "Premium ✨":
-                            st.download_button("📥 POBIERZ RAPORT PDF", data=create_pro_pdf(ans, img), file_name="Oniro_Report.pdf", mime="application/pdf")
-                            # --- BLOKADA PO UŻYCIU ---
-                            st.session_state['premium_verified'] = False
-                            st.session_state['balloons_done'] = False
-                    except Exception as e:
-                        st.error(f"Error: {e}")
-
-if __name__ == "__main__":
-    main()
+    # --- POPRAWIONY PROMPT (Mroczny i sprzedażowy dla darmowej wersji) ---
+    if mode == "Premium ✨":
+        sys_prompt = "Jesteś Oniro Pro. Wykonaj głęboką, mistyczną i profesjonalną analizę snu (ponad 400 słów) w języku polskim. Używaj bogatego słownictwa, odnoś się do archetypów Junga i symboliki onirycznej."
+    else:
+        sys_prompt = """Jesteś Oniro Standard. Twoim zadaniem jest podanie mrocznego, psychologicznego wglądu w sen użytkownika w dokładnie 2-3 zdaniach. 
+        Nie opisuj naiwnie tego, co widać na obrazku. Skup się na ukrytych lękach i podświadomości. 
+        Zakończ tekst zdaniem: 'Twoja podświadomość skrywa więcej – pełny raport i wizja Ultra HD dostępne w wersji Premium.'"""
+    
+    analysis = client.chat.completions.create(model
