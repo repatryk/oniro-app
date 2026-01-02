@@ -74,17 +74,13 @@ def create_pro_pdf(analysis, image_url):
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
     if mode == "Premium ✨":
-        sys_prompt = "Jesteś Oniro Pro. Wykonaj głęboką, mistyczną i profesjonalną analizę snu (ponad 400 słów) w języku polskim. Używaj bogatego słownictwa i archetypów Junga."
+        sys_prompt = "Jesteś Oniro Pro. Wykonaj głęboką, mistyczną i profesjonalną analizę snu (ponad 400 słów) w języku polskim."
     else:
-        sys_prompt = "Jesteś Oniro Standard. Podaj mroczny, psychologiczny wgląd w sen (2-3 zdania). Skup się na ukrytych lękach. Zakończ: 'Pełna wizja Ultra HD dostępna w Premium.'"
+        sys_prompt = "Jesteś Oniro Standard. Podaj mroczny wgląd w sen (2-3 zdania). Zakończ: 'Pełna wizja Ultra HD dostępna w Premium.'"
 
-    # POPRAWKA NAWIASÓW TUTAJ:
     response = client.chat.completions.create(
         model="gpt-4o",
-        messages=[
-            {"role": "system", "content": sys_prompt},
-            {"role": "user", "content": text}
-        ]
+        messages=[{"role": "system", "content": sys_prompt}, {"role": "user", "content": text}]
     )
     analysis = response.choices[0].message.content
 
@@ -95,16 +91,13 @@ def get_ai_response(text, api_key, mode):
         size="1024x1024"
     )
     img_url = image_response.data[0].url
-    
     return analysis, img_url
 
 def main():
     st.markdown("<h1>🌙 ONIRO</h1>", unsafe_allow_html=True)
     col1, col2 = st.columns([1.6, 1])
-    try:
-        api_key = st.secrets["OPENAI_API_KEY"]
-    except:
-        api_key = None
+    try: api_key = st.secrets["OPENAI_API_KEY"]
+    except: api_key = None
     
     with col2:
         st.markdown("### ✨ Wybierz Poziom")
@@ -120,10 +113,16 @@ def main():
                 <a href="https://buy.stripe.com/eVqdR25as8jU8FJ4hs4Ni01" target="_blank" style="text-decoration:none;">
                 <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
             """, unsafe_allow_html=True)
+            
             password = st.text_input("Kod dostępu:", type="password")
+            
+            # --- POPRAWIONA WERYFIKACJA KODU ---
             if password == "MAGIA2026":
                 st.session_state['premium_verified'] = True
-                st.success("Premium aktywne!")
+                st.success("Premium aktywne! Dekoduj wizję.")
+            elif password != "":
+                st.session_state['premium_verified'] = False
+                st.error("Błędny kod dostępu.") # Tu wyświetla błąd!
             else:
                 st.session_state['premium_verified'] = False
 
@@ -131,7 +130,7 @@ def main():
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
         if st.button("✨ DEKODUJ SEN"):
             if mode == "Premium ✨" and not st.session_state['premium_verified']:
-                st.warning("Wymagany kod Premium.")
+                st.warning("Najpierw wpisz prawidłowy kod Premium.")
             elif api_key and dream_text:
                 with st.spinner("Oniro dekoduje..."):
                     try:
