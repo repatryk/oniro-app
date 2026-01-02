@@ -8,11 +8,9 @@ import re
 # --- KONFIGURACJA ---
 st.set_page_config(page_title="Oniro - Dream Portal", page_icon="🌙", layout="wide")
 
-# Pamięć sesji dla balonów
 if 'balloons_done' not in st.session_state:
     st.session_state['balloons_done'] = False
 
-# Pamięć weryfikacji Premium
 if 'premium_verified' not in st.session_state:
     st.session_state['premium_verified'] = False
 
@@ -29,7 +27,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- KLASA PDF ---
 class DreamPDF(FPDF):
     def header(self):
         if self.page_no() == 1:
@@ -53,12 +50,15 @@ def create_pro_pdf(analysis, image_url):
         with open("temp_img.png", "wb") as f: f.write(img_data.getbuffer())
         pdf.image("temp_img.png", x=25, y=45, w=160)
         pdf.set_y(210)
-    except: pdf.set_y(40)
+    except:
+        pdf.set_y(40)
+    
     def to_latin(t):
         t = t.replace('**', '').replace('##', '').replace('#', '')
         rep = {'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z', 'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'}
         for k, v in rep.items(): t = t.replace(k, v)
         return re.sub(r'[^\x00-\x7f]', '', t)
+
     lines = analysis.split('\n')
     for line in lines:
         if not line.strip(): continue
@@ -73,37 +73,38 @@ def create_pro_pdf(analysis, image_url):
 
 def get_ai_response(text, api_key, mode):
     client = openai.OpenAI(api_key=api_key)
-    
     if mode == "Premium ✨":
-        sys_prompt = "Jesteś Oniro Pro. Wykonaj głęboką, mistyczną i profesjonalną analizę snu (ponad 400 słów) w języku polskim. Używaj bogatego słownictwa, odnoś się do archetypów Junga i symboliki onirycznej."
+        sys_prompt = "Jesteś Oniro Pro. Wykonaj głęboką, mistyczną i profesjonalną analizę snu (ponad 400 słów) w języku polskim. Używaj bogatego słownictwa i archetypów Junga."
     else:
-        sys_prompt = """Jesteś Oniro Standard. Twoim zadaniem jest podanie mrocznego, psychologicznego wglądu w sen użytkownika w dokładnie 2-3 zdaniach. 
-        Nie opisuj naiwnie tego, co widać na obrazku. Skup się na ukrytych lękach, symbolice podświadomości i niepokojących aspektach jaźni. 
-        Zakończ tekst zdaniem: 'Twoja podświadomość skrywa więcej – pełny raport i wizja Ultra HD dostępne w wersji Premium.'"""
-    
-    # Naprawiona składnia nawiasów
-    analysis = client.chat.completions.create(
-        model="gpt-4o", 
+        sys_prompt = "Jesteś Oniro Standard. Podaj mroczny, psychologiczny wgląd w sen (2-3 zdania). Skup się na ukrytych lękach. Zakończ: 'Pełna wizja Ultra HD dostępna w Premium.'"
+
+    # POPRAWKA NAWIASÓW TUTAJ:
+    response = client.chat.completions.create(
+        model="gpt-4o",
         messages=[
-            {"role": "system", "content": sys_prompt}, 
+            {"role": "system", "content": sys_prompt},
             {"role": "user", "content": text}
         ]
-    ).choices[0].message.content
-    
-    img_url = client.images.generate(
-        model="dall-e-3", 
-        prompt=text, 
-        quality="hd" if mode == "Premium ✨" else "standard", 
+    )
+    analysis = response.choices[0].message.content
+
+    image_response = client.images.generate(
+        model="dall-e-3",
+        prompt=text,
+        quality="hd" if mode == "Premium ✨" else "standard",
         size="1024x1024"
-    ).data[0].url
+    )
+    img_url = image_response.data[0].url
     
     return analysis, img_url
 
 def main():
     st.markdown("<h1>🌙 ONIRO</h1>", unsafe_allow_html=True)
     col1, col2 = st.columns([1.6, 1])
-    try: api_key = st.secrets["OPENAI_API_KEY"]
-    except: api_key = None
+    try:
+        api_key = st.secrets["OPENAI_API_KEY"]
+    except:
+        api_key = None
     
     with col2:
         st.markdown("### ✨ Wybierz Poziom")
@@ -119,35 +120,28 @@ def main():
                 <a href="https://buy.stripe.com/eVqdR25as8jU8FJ4hs4Ni01" target="_blank" style="text-decoration:none;">
                 <div style="background:#ffd700;color:black;padding:12px;border-radius:10px;font-weight:bold;text-align:center;">KUP DOSTĘP PREMIUM</div></a></div>
             """, unsafe_allow_html=True)
-            
-            password = st.text_input("Wpisz otrzymany kod:", type="password", placeholder="Kod tutaj...")
-            
+            password = st.text_input("Kod dostępu:", type="password")
             if password == "MAGIA2026":
-                if not st.session_state['balloons_done']:
-                    st.balloons()
-                    st.session_state['balloons_done'] = True
-                st.success("Dostęp Premium aktywny!")
                 st.session_state['premium_verified'] = True
-            elif password != "":
-                st.error("Nieprawidłowy kod.")
+                st.success("Premium aktywne!")
+            else:
                 st.session_state['premium_verified'] = False
 
     with col1:
         dream_text = st.text_area("Opisz swoją wizję...", height=300)
         if st.button("✨ DEKODUJ SEN"):
             if mode == "Premium ✨" and not st.session_state['premium_verified']:
-                st.warning("Ta funkcja wymaga kodu dostępu.")
+                st.warning("Wymagany kod Premium.")
             elif api_key and dream_text:
-                with st.spinner("Oniro dekoduje podświadomość..."):
+                with st.spinner("Oniro dekoduje..."):
                     try:
                         ans, img = get_ai_response(dream_text, api_key, mode)
                         st.image(img, use_container_width=True)
                         st.markdown(f"<div class='dream-report'>{ans}</div>", unsafe_allow_html=True)
                         if mode == "Premium ✨":
-                            st.download_button("📥 POBIERZ RAPORT PDF", data=create_pro_pdf(ans, img), file_name="Oniro_Report.pdf", mime="application/pdf")
-                            st.session_state['premium_verified'] = False
+                            st.download_button("📥 POBIERZ PDF", data=create_pro_pdf(ans, img), file_name="Oniro.pdf", mime="application/pdf")
                     except Exception as e:
-                        st.error(f"Error: {e}")
+                        st.error(f"Błąd: {e}")
 
 if __name__ == "__main__":
     main()
